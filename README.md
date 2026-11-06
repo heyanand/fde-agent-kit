@@ -1,4 +1,4 @@
-# `fde-agent-kit` — Forward Deployed Engineering Agent Skill Forge
+# Forward Deployed Engineering Agent Kit
 
 A portable, multi-harness monorepo of production-grade Agent Skills, deterministic verification scripts, and Just-In-Time (JIT) workspace synchronization tools built for Google Antigravity, Gemini CLI, Claude Code, and OpenAI Codex.
 
