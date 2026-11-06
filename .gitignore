@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.DS_Store
+.env
+.env.*
+!.env.example
+*.bak
+skills.manifest.local.json
+dist/
+build/
+output/
+*.png
+*.webp
+!skills/**/assets/*.png
+!skills/**/assets/*.webp
+!skills/**/assets/*.svg

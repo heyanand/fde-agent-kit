@@ -1,0 +1,15 @@
+{
+  "name": "fde-agent-kit",
+  "displayName": "FDE Agent Kit",
+  "version": "1.0.0",
+  "description": "Portable Forward Deployed Engineering (FDE) agent skill forge, verification harness, and JIT skill sync engine for Google Antigravity, Gemini CLI, Claude Code, and OpenAI Codex.",
+  "author": {
+    "name": "Hemanand Rajendran",
+    "url": "https://github.com/hemr"
+  },
+  "suggestedPrompts": [
+    "Audit my global and project skill symlinks with sync_skills.py",
+    "Stress-test this architecture idea and generate a milestone DAG spec",
+    "Run static verification and a 5-axis review on my current changes"
+  ]
+}

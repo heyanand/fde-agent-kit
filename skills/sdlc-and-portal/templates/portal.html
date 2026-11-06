@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>__PORTAL_TITLE__</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --border: #334155;
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --accent: #0284c7;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+    aside {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    aside h1 { font-size: 1.05rem; margin: 0 0 1rem; color: var(--accent); }
+    .nav-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid transparent;
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.92rem;
+      margin-bottom: 0.35rem;
+    }
+    .nav-btn.active, .nav-btn:hover {
+      color: var(--text);
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+    main { padding: 2.5rem 3.5rem; max-width: 980px; line-height: 1.65; }
+    pre {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.9em;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; }
+    th, td { border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }
+    blockquote {
+      margin: 1rem 0;
+      padding: 0.5rem 1rem;
+      border-left: 4px solid var(--accent);
+      background: rgba(56, 189, 248, 0.06);
+    }
+    main a { color: var(--accent); }
+    img { max-width: 100%; height: auto; }
+    .mermaid { background: var(--panel); border-radius: 0.5rem; padding: 0.5rem; overflow-x: auto; }
+    @media (max-width: 820px) {
+      body { grid-template-columns: 1fr; }
+      aside { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+      main { padding: 1.5rem 1.25rem; }
+    }
+    .theme-toggle {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>__PORTAL_TITLE__</h1>
+    <div id="nav"></div>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Light / Dark</button>
+  </aside>
+  <main id="content"></main>
+  <script id="portal-data" type="application/json">__PORTAL_PAYLOAD_JSON__</script>
+  <script>
+    const SECTIONS = JSON.parse(document.getElementById("portal-data").textContent);
+    const PORTAL_TITLE = document.title;
+    let currentSectionIndex = 0;
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    const BLOCKED_TAGS = "script, iframe, frame, frameset, object, embed, applet, base, meta, link, form, style";
+    const URL_ATTRS = ["href", "src", "xlink:href", "action", "formaction", "background", "poster"];
+
+    function isUnsafeUrl(name, value) {
+      const v = value.replace(/[\s\u0000-\u001f]+/g, "").toLowerCase();
+      if (v.startsWith("javascript:") || v.startsWith("vbscript:")) return true;
+      // Allow inline raster images in <img src> only; block other data: URLs (e.g. data:text/html).
+      if (v.startsWith("data:")) return !(name === "src" && /^data:image\/(png|jpe?g|gif|webp);/.test(v));
+      return false;
+    }
+
+    function sanitizeHtml(rawHtml) {
+      const tpl = document.createElement("template");
+      tpl.innerHTML = rawHtml;
+      tpl.content.querySelectorAll(BLOCKED_TAGS).forEach((el) => el.remove());
+      tpl.content.querySelectorAll("*").forEach((el) => {
+        Array.from(el.attributes).forEach((attr) => {
+          const name = attr.name.toLowerCase();
+          if (name.startsWith("on") || name === "srcdoc" || name === "style" ||
+              (URL_ATTRS.includes(name) && isUnsafeUrl(name, attr.value))) {
+            el.removeAttribute(attr.name);
+          }
+        });
+        if (el.tagName === "A" && /^https?:/i.test(el.getAttribute("href") || "")) {
+          el.setAttribute("target", "_blank");
+          el.setAttribute("rel", "noopener noreferrer");
+        }
+      });
+      return tpl.innerHTML;
+    }
+
+    function formatInline(text) {
+      return escapeHtml(text)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|#[\w-]+|[\w./-]+)\)/g, '<a href="$2">$1</a>');
+    }
+
+    // Built-in zero-dependency offline fallback parser for air-gapped / VPC-SC environments
+    function fallbackMarkdown(md) {
+      const lines = md.split(/\r?\n/);
+      let out = [];
+      let inFence = false;
+      let fenceLang = "";
+      let fenceBuf = [];
+      let listTag = null;
+      const closeList = () => { if (listTag) { out.push(`</${listTag}>`); listTag = null; } };
+      const openList = (tag) => { if (listTag !== tag) { closeList(); out.push(`<${tag}>`); listTag = tag; } };
+      const flushFence = () => {
+        const escaped = escapeHtml(fenceBuf.join("\n"));
+        const cls = fenceLang ? ` class="language-${escapeHtml(fenceLang)}"` : "";
+        out.push(`<pre><code${cls}>${escaped}</code></pre>`);
+      };
+
+      for (const line of lines) {
+        if (line.trim().startsWith("```")) {
+          if (!inFence) {
+            closeList();
+            inFence = true;
+            fenceLang = line.trim().slice(3).trim();
+            fenceBuf = [];
+          } else {
+            flushFence();
+            inFence = false;
+            fenceLang = "";
+          }
+          continue;
+        }
+        if (inFence) {
+          fenceBuf.push(line);
+          continue;
+        }
+        const trimmed = line.trim();
+        const heading = /^(#{1,6})\s+(.*?)\s*#*$/.exec(line);
+        const bullet = /^[-*+]\s+(.*)$/.exec(trimmed);
+        const ordered = /^\d+[.)]\s+(.*)$/.exec(trimmed);
+        if (bullet) {
+          openList("ul");
+          out.push(`<li>${formatInline(bullet[1])}</li>`);
+          continue;
+        }
+        if (ordered) {
+          openList("ol");
+          out.push(`<li>${formatInline(ordered[1])}</li>`);
+          continue;
+        }
+        closeList();
+        if (heading) {
+          const level = heading[1].length;
+          out.push(`<h${level}>${formatInline(heading[2])}</h${level}>`);
+        } else if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
+          out.push("<hr />");
+        } else if (trimmed.startsWith("> ")) {
+          out.push(`<blockquote>${formatInline(trimmed.slice(2))}</blockquote>`);
+        } else if (trimmed !== "") {
+          out.push(`<p>${formatInline(line)}</p>`);
+        }
+      }
+      if (inFence) flushFence(); // Never drop content from an unclosed fence.
+      closeList();
+      return out.join("\n");
+    }
+
+    function renderMermaidDiagrams() {
+      if (typeof mermaid === "undefined") return;
+      const currentTheme = document.documentElement.getAttribute("data-theme") === "light" ? "default" : "dark";
+      mermaid.initialize({ startOnLoad: false, theme: currentTheme });
+      document.querySelectorAll(".mermaid").forEach((div) => {
+        const src = div.getAttribute("data-mermaid-src");
+        if (src) {
+          div.removeAttribute("data-processed");
+          div.textContent = src;
+        }
+      });
+      try {
+        mermaid.run();
+      } catch (err) {
+        console.warn("Mermaid render failed:", err);
+      }
+    }
+
+    function renderSection(index, updateHash = true) {
+      if (index < 0 || index >= SECTIONS.length) return;
+      currentSectionIndex = index;
+      if (updateHash && location.hash !== `#${SECTIONS[index].id}`) {
+        history.replaceState(null, "", `#${SECTIONS[index].id}`);
+      }
+      document.title = `${SECTIONS[index].title} - ${PORTAL_TITLE}`;
+      document.querySelectorAll(".nav-btn").forEach((b, i) => b.classList.toggle("active", i === index));
+      const container = document.getElementById("content");
+      const rawMd = SECTIONS[index].markdown;
+      const parsedHtml = (typeof marked !== "undefined" && marked.parse)
+        ? sanitizeHtml(marked.parse(rawMd))
+        : fallbackMarkdown(rawMd);
+      container.innerHTML = parsedHtml;
+      container.querySelectorAll("code.language-mermaid").forEach((block) => {
+        const div = document.createElement("div");
+        div.className = "mermaid";
+        div.setAttribute("data-mermaid-src", block.textContent);
+        div.textContent = block.textContent;
+        block.parentElement.replaceWith(div);
+      });
+      renderMermaidDiagrams();
+      window.scrollTo(0, 0);
+    }
+
+    function sectionIndexFromHash() {
+      const id = decodeURIComponent(location.hash.replace(/^#/, ""));
+      return SECTIONS.findIndex((sec) => sec.id === id);
+    }
+
+    function toggleTheme() {
+      const root = document.documentElement;
+      const next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
+      root.setAttribute("data-theme", next);
+      renderMermaidDiagrams();
+    }
+
+    const nav = document.getElementById("nav");
+    SECTIONS.forEach((sec, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "nav-btn";
+      btn.textContent = sec.title;
+      btn.onclick = () => renderSection(idx);
+      nav.appendChild(btn);
+    });
+    window.addEventListener("hashchange", () => {
+      const idx = sectionIndexFromHash();
+      if (idx >= 0 && idx !== currentSectionIndex) renderSection(idx, false);
+    });
+    document.addEventListener("keydown", (evt) => {
+      if (evt.target.closest && evt.target.closest("input, textarea")) return;
+      if (evt.key === "ArrowRight" || evt.key === "j") renderSection(currentSectionIndex + 1);
+      if (evt.key === "ArrowLeft" || evt.key === "k") renderSection(currentSectionIndex - 1);
+    });
+    if (SECTIONS.length > 0) {
+      const initial = sectionIndexFromHash();
+      renderSection(initial >= 0 ? initial : 0, initial < 0);
+    } else {
+      document.getElementById("content").textContent = "No documents were compiled into this portal.";
+    }
+  </script>
+</body>
+</html>

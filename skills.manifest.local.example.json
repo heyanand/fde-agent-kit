@@ -1,0 +1,26 @@
+{
+  "corp_layer": {
+    "mount_check_paths": [
+      "/path/to/corp/mount/root",
+      "/Volumes/corp/mount/root"
+    ],
+    "skills": [
+      {
+        "name": "gdocs",
+        "path": "/path/to/corp/mount/root/skills/gdocs"
+      },
+      {
+        "name": "gdrive",
+        "path": "/path/to/corp/mount/root/skills/gdrive"
+      },
+      {
+        "name": "gsheets",
+        "path": "/path/to/corp/mount/root/skills/gsheets"
+      },
+      {
+        "name": "gslides",
+        "path": "/path/to/corp/mount/root/skills/gslides"
+      }
+    ]
+  }
+}

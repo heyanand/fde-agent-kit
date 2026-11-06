@@ -1,0 +1,132 @@
+{
+  "version": 2,
+  "repository": "fde-agent-kit",
+  "harnesses": {
+    "global_skill_targets": [
+      "~/.gemini/config/skills",
+      "~/.gemini/skills",
+      "~/.claude/skills",
+      "~/.codex/skills"
+    ],
+    "project_skill_targets": [
+      ".gemini/skills",
+      ".claude/skills",
+      ".codex/skills",
+      ".agents/skills"
+    ],
+    "global_rule_targets": [
+      "~/.gemini/GEMINI.md",
+      "~/.claude/CLAUDE.md",
+      "~/.codex/AGENTS.md"
+    ],
+    "upstream_cache_dir": "~/.cache/fde-agent-kit/upstream/skills"
+  },
+  "clusters": {
+    "core": {
+      "description": "Global Core skills always symlinked into global harness skill directories",
+      "skills": [
+        "catalog",
+        "sync",
+        "idea-refine",
+        "grill-and-spec",
+        "code-review-and-quality",
+        "git-workflow-and-versioning",
+        "verify",
+        "unslop"
+      ]
+    },
+    "jit": {
+      "description": "Project-scoped domain and execution skills attached on demand via sync_skills.py --project",
+      "skills": [
+        "documentation-and-adrs",
+        "sdlc-and-portal",
+        "image-gen",
+        "continuous-alignment",
+        "work",
+        "codelab",
+        "gcp-sovereign-arch",
+        "google-oss",
+        "skill-forge"
+      ]
+    }
+  },
+  "packs": {
+    "adk": {
+      "description": "Google Cloud Agent Development Kit (ADK) full lifecycle suite",
+      "local_skills": [
+        "gcp-sovereign-arch"
+      ],
+      "upstream_skills": [
+        "google-agents-cli-workflow",
+        "google-agents-cli-adk-code",
+        "google-agents-cli-deploy",
+        "google-agents-cli-eval",
+        "google-agents-cli-observability",
+        "google-agents-cli-publish",
+        "google-agents-cli-scaffold"
+      ]
+    },
+    "arch": {
+      "description": "Enterprise and Sovereign Cloud architecture discovery, ADRs, and visual deliverables",
+      "local_skills": [
+        "gcp-sovereign-arch",
+        "documentation-and-adrs",
+        "sdlc-and-portal",
+        "image-gen",
+        "continuous-alignment"
+      ],
+      "upstream_skills": []
+    },
+    "devrel": {
+      "description": "Open-source publishing, interactive codelabs, and presentation portals",
+      "local_skills": [
+        "codelab",
+        "google-oss",
+        "sdlc-and-portal",
+        "image-gen"
+      ],
+      "upstream_skills": []
+    },
+    "audit": {
+      "description": "High-stakes adversarial verification, debugging, and security hardening",
+      "local_skills": [
+        "verify",
+        "code-review-and-quality"
+      ],
+      "upstream_skills": [
+        "debugging-and-error-recovery",
+        "doubt-driven-development",
+        "security-and-hardening"
+      ]
+    }
+  },
+  "upstream_sources": [
+    {
+      "repo": "google/agents-cli",
+      "ref": "v0.4.0",
+      "skills": [
+        "google-agents-cli-workflow",
+        "google-agents-cli-adk-code",
+        "google-agents-cli-deploy",
+        "google-agents-cli-eval",
+        "google-agents-cli-observability",
+        "google-agents-cli-publish",
+        "google-agents-cli-scaffold"
+      ]
+    },
+    {
+      "repo": "addyosmani/agent-skills",
+      "ref": "main",
+      "skills": [
+        "debugging-and-error-recovery",
+        "doubt-driven-development",
+        "security-and-hardening"
+      ]
+    }
+  ],
+  "corp_layer": {
+    "local_override_file": "skills.manifest.local.json",
+    "mount_check_paths": [],
+    "skills": []
+  }
+}
